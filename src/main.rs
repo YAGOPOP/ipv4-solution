@@ -1,5 +1,7 @@
-// use ipaddress::IPAddress;
-use std::io::{Write, stdin, stdout};
+use std::{
+    fmt::write,
+    io::{Write, stdin, stdout},
+};
 
 fn main() {
     println!("Задание 1");
@@ -62,6 +64,37 @@ fn main() {
             ip_dec_presentation(broadcast_ip)
         )
     }
+
+    println!("Дополнительное задание");
+    let numbers = obtain_numbers("Количества узлов в каждой подсети: ");
+    for (i, nw) in networks.iter().enumerate() {
+        println!("Задача {}", i + 1);
+        let mask = masks[i];
+
+        let ips_in_nw = numbers[i] + 2;
+        let matter_bytes = (ips_in_nw as f64).log2().ceil() as u8;
+        let new_prefix = 32 - matter_bytes;
+        let newmask = prefix_to_mask(new_prefix);
+
+        let mut new_network = nw & newmask;
+
+        let ips_in_nw = 2u32.pow(matter_bytes as u32);
+        for j in 1..=2u8.pow(new_prefix as u32 - mask.leading_ones()) {
+            present_subnet(j, new_network, new_prefix, ips_in_nw);
+            new_network += ips_in_nw;
+        }
+    }
+}
+
+fn present_subnet(ctr: u8, new_network: u32, newmask: u8, ips_in_nw: u32) {
+    println!(
+        "Подсеть {}:\n\t— Адрес подсети: {}/{};\n\t— Блок адресов: {}—{}",
+        ctr,
+        ip_dec_presentation(new_network.to_be_bytes()),
+        newmask,
+        ip_dec_presentation(new_network.to_be_bytes()),
+        ip_dec_presentation((new_network + ips_in_nw - 1).to_be_bytes()),
+    );
 }
 
 fn classify_ip(first_byte: u8) -> &'static str {
@@ -115,6 +148,14 @@ fn ip_bin_presentation(ip: [u8; 4]) -> String {
     ip.map(|o| format!("{:08b}", o)).join(".")
 }
 
+fn obtain_numbers(prompt: &str) -> Vec<u32> {
+    let inp = my_input(prompt);
+    inp.trim()
+        .split_whitespace()
+        .map(|m| m.parse().unwrap())
+        .collect()
+}
+
 // enum ArrayFromIterError {
 //     TooManyItems,
 //     TooFewItems,
@@ -160,4 +201,34 @@ fn ip_bin_presentation(ip: [u8; 4]) -> String {
 //     } else {
 //         "E"
 //     }
+// }
+
+// struct IpAddress {
+//     address: u32
+// }
+
+// enum IpParseError {
+//     TooMuchBytes,
+//     TooFewBytes,
+//     TooBigByte,
+//     InvalidByte,
+// }
+
+// impl IpAddress {
+//     fn from_str(s: &str) -> Result<Self, IpParseError> {
+//         let mut ip: Vec<&str> = s.split(".").collect();
+//         if
+//         todo!()
+//     }
+// }
+
+// struct IpNetwork {
+//     address: IpAddress,
+//     mask_prefix: u8
+// }
+// impl IpNetwork {
+//     fn from_ip_and_pask_prefix(ip: IpAddress, mp: u8) -> Self {
+//         todo!()
+//     }
+
 // }
